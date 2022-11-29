@@ -1,5 +1,5 @@
 from keyboard import sender
-from main import *
+from bot import *
 
 for event in bot.longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW and event.to_me:
