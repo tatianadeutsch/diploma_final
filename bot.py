@@ -189,7 +189,7 @@ class VKBot:
                 else:
                     continue
             return f'Поиск завершён'
-        except (LookupError, SyntaxError, TypeError):
+        except (KeyError, LookupError, SyntaxError, TypeError):
             self.write_msg(user_id, "Произошла ошибка обработки данных .json. Попробуйте изменить критерии поиска")
 
     # Получить фотографии
