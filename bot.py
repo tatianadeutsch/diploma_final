@@ -10,8 +10,8 @@ from database import *
 class VKBot:
     def __init__(self):
         print('Ура! Бот наконец-то создан!')
-        TOKEN_GROUP = ''
-        TOKEN_APP = ''
+        TOKEN_GROUP = 'vk1.a.oTh7jAywfJBeHbav1ERJnP8VN-sx6IUIzt6UwddnZe5ZB8uTqB7fT__CPJbQCanQE_LFFueIzBHvh5ZUp0AxEkI1xy1Z8uii8WbwiekOf3Ip54EHcjxpIdSW1zIEsHCCcVRdlHvsOdpITai3F0zhTDoPWc0H7JVKUPFJohImLjQFWZoH9fpIDSjH7t3KvJukE8qQYR0urZ2tuQw-AZUl1w'
+        TOKEN_APP = 'vk1.a.bs60HhC6-7DMG2kcOzM0SCtp4AqhatQjEiy-BhsYG9T_jzmiGSxnG9X0nYPGeBjtUICj_hq0mUdxdfp5jYa7Qw0FopXoBi9bqBzLAf80SqvNsDVe8jJ1aZaE8S6CXyTuxyUZ_vysVCs684tKUdwp6yb2_0mRdxiCCVDTILbn43IVcRRFu-L7t3aYzs1pAD-QZi-mbPnBhEts7XiIe-83Nw'
         self.vk = vk_api.VkApi(token=TOKEN_GROUP)
         self.longpoll = VkLongPoll(self.vk)
         self.url = 'https://api.vk.com/method/'
@@ -32,10 +32,14 @@ class VKBot:
                   }
         response = requests.get(url_name, params={**self.params, **params}).json()
 
-        for info in response['response']:
-            for key, value in info.items():
-                first_name = info.get('first_name')
-                return first_name
+        try:
+            for info in response['response']:
+                for key, value in info.items():
+                    first_name = info.get('first_name')
+                    return first_name
+
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
 
     # Запросить возраст визави пользователя: ОТ
     def get_age_low(self, user_id):
@@ -44,19 +48,26 @@ class VKBot:
                   'fields': 'bdate'}
         response = requests.get(url_age_low, params={**self.params, **params}).json()
 
-        for info in response['response']:
-            date = info.get('bdate')
-            date_list = date.split('.')
-            if len(date_list) == 3:
-                year = int(date_list[2])
-                year_now = int(datetime.date.today().year)
-                return year_now - year
-            elif len(date_list) == 2 or date not in response['response']:
-                self.write_msg(user_id, 'Введите возраст для своего визави (от 18 лет): ')
-                for event in self.longpoll.listen():
-                    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                        age = event.text
-                        return age
+        try:
+            for info in response['response']:
+                date = info.get('bdate')
+                date_list = date.split('.')
+                if len(date_list) == 3:
+                    year = int(date_list[2])
+                    year_now = int(datetime.date.today().year)
+                    return year_now - year
+                elif len(date_list) == 2 or date not in response['response']:
+                    self.write_msg(user_id, 'Введите возраст для своего визави (от 18 лет): ')
+                    for event in self.longpoll.listen():
+                        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                            age = event.text
+                            if age >= 18:
+                                return age
+                            else:
+                                self.write_msg(user_id, 'Введено неверное значение.')
+                                continue
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
 
     # Запросить возраст визави пользователя: ДО
     def get_age_high(self, user_id):
@@ -65,19 +76,26 @@ class VKBot:
                   'fields': 'bdate'}
         response = requests.get(url_age_high, params={**self.params, **params}).json()
 
-        for info in response['response']:
-            date = info.get('bdate')
-            date_list = date.split('.')
-            if len(date_list) == 3:
-                year = int(date_list[2])
-                year_now = int(datetime.date.today().year)
-                return year_now - year
-            elif len(date_list) == 2 or date not in response['response']:
-                self.write_msg(user_id, 'Введите возраст для своего визави (до 99 лет) ')
-                for event in self.longpoll.listen():
-                    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                        age = event.text
-                        return age
+        try:
+            for info in response['response']:
+                date = info.get('bdate')
+                date_list = date.split('.')
+                if len(date_list) == 3:
+                    year = int(date_list[2])
+                    year_now = int(datetime.date.today().year)
+                    return year_now - year
+                elif len(date_list) == 2 or date not in response['response']:
+                    self.write_msg(user_id, 'Введите возраст для своего визави (до 99 лет) ')
+                    for event in self.longpoll.listen():
+                        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                            age = event.text
+                            if age >= 18 and age <= 99 or age >= self.get_age_low:
+                                return age
+                            else:
+                                self.write_msg(user_id, 'Введено неверное значение.')
+                                continue
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
 
     # Запросить пол визави пользователя и сменить на противоположный
     def get_sex(self, user_id):
@@ -86,13 +104,16 @@ class VKBot:
                   'fields': 'sex'}
         response = requests.get(url_get_sex, params={**self.params, **params}).json()
 
-        for info in response['response']:
-            if info.get('sex') == 2:
-                sex = 1
-                return sex
-            elif info.get('sex') == 1:
-                sex = 2
-                return sex
+        try:
+            for info in response['response']:
+                if info.get('sex') == 2:
+                    sex = 1
+                    return sex
+                elif info.get('sex') == 1:
+                    sex = 2
+                    return sex
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
 
     # Адаптация названия города к ИД города
     def cities(self, user_id, city_name):
@@ -104,11 +125,15 @@ class VKBot:
                   'v': '5.131'}
         response = requests.get(url_cities, params={**self.params, **params}).json()
 
-        for info in response['response']['items']:
-            found_city_name = info.get('title')
-            if found_city_name == city_name:
-                found_city_id = info.get('id')
-                return int(found_city_id)
+        try:
+            for info in response['response']['items']:
+                found_city_name = info.get('title')
+                if found_city_name == city_name:
+                    found_city_id = info.get('id')
+                    return int(found_city_id)
+
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
 
     # Запросить название города визави пользователя
     def find_city(self, user_id):
@@ -121,21 +146,25 @@ class VKBot:
                   }
         response = requests.get(url_city, params={**self.params, **params}).json()
 
-        for info in response['response']:
-            if 'city' in info:
-                city = info.get('city')
-                id = str(city.get('id'))
-                return id
-            elif 'city' not in info:
-                self.write_msg(user_id, 'Введите название города своего визави: ')
-                for event in self.longpoll.listen():
-                    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                        city_name = event.text
-                        id_city = self.cities(user_id, city_name)
-                        if id_city != '' or id_city != None:
-                            return str(id_city)
-                        else:
-                            break
+        try:
+            for info in response['response']:
+                if 'city' in info:
+                    city = info.get('city')
+                    id = str(city.get('id'))
+                    return id
+                elif 'city' not in info:
+                    self.write_msg(user_id, 'Введите название города своего визави: ')
+                    for event in self.longpoll.listen():
+                        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                            city_name = event.text
+                            id_city = self.cities(user_id, city_name)
+                            if id_city != '' or id_city != None:
+                                return str(id_city)
+                            else:
+                                self.write_msg(user_id, 'Введено неверное значение.')
+                                break
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
 
     # Поиск визави по запрошенным данным + определние семейного/не семейного положения
     def find_user(self, user_id):
@@ -149,17 +178,19 @@ class VKBot:
                   'status': 1 or 6,
                   'count': 500}
         response = requests.get(url_search, params={**self.params, **params}).json()
-
-        for person_dict in response['response']['items']:
-            if person_dict.get('is_closed') == False:
-                first_name = person_dict.get('first_name')
-                last_name = person_dict.get('last_name')
-                vk_id = str(person_dict.get('id'))
-                vk_link = 'vk.com/id' + str(person_dict.get('id'))
-                insert_data_users(first_name, last_name, vk_id, vk_link)
-            else:
-                continue
-        return f'Поиск завершён'
+        try:
+            for person_dict in response['response']['items']:
+                if person_dict.get('is_closed') == False:
+                    first_name = person_dict.get('first_name')
+                    last_name = person_dict.get('last_name')
+                    vk_id = str(person_dict.get('id'))
+                    vk_link = 'vk.com/id' + str(person_dict.get('id'))
+                    insert_data_users(first_name, last_name, vk_id, vk_link)
+                else:
+                    continue
+            return f'Поиск завершён'
+        except (LookupError, SyntaxError, TypeError):
+            self.write_msg(user_id, "Произошла ошибка обработки данных .json. Попробуйте изменить критерии поиска")
 
     # Получить фотографии
     def get_photos_id(self, user_id):
