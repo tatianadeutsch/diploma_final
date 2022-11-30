@@ -1,4 +1,4 @@
-from bot import main
+from bot import *
 import json
 
 
