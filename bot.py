@@ -5,6 +5,7 @@ import datetime
 from vk_api.longpoll import VkLongPoll, VkEventType
 from random import randrange
 from database import *
+import simplejson
 
 
 class VKBot:
@@ -33,13 +34,19 @@ class VKBot:
         response = requests.get(url_name, params={**self.params, **params}).json()
 
         try:
+            res = response['response']
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка ключа')
+            res = None
+
+        if res:
             for info in response['response']:
                 for key, value in info.items():
                     first_name = info.get('first_name')
                     return first_name
 
-        except KeyError:
-            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
+        else:
+            self.write_msg(user_id, 'Ошибка распаковки json')
 
     # Запросить возраст визави пользователя: ОТ
     def get_age_low(self, user_id):
@@ -49,6 +56,11 @@ class VKBot:
         response = requests.get(url_age_low, params={**self.params, **params}).json()
 
         try:
+            res = response['response']
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка ключа')
+            res = None
+        if res:
             for info in response['response']:
                 date = info.get('bdate')
                 date_list = date.split('.')
@@ -61,13 +73,17 @@ class VKBot:
                     for event in self.longpoll.listen():
                         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                             age = event.text
-                            if age >= 18:
-                                return age
+                            if age.isdigit():
+                                age = int(age)
+                                if age >= 18:
+                                    return age
+                                else:
+                                    self.write_msg(user_id, 'Значение, которое вы ввели, не является числом.')
                             else:
                                 self.write_msg(user_id, 'Введено неверное значение.')
                                 continue
-        except KeyError:
-            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
+        else:
+            self.write_msg(user_id, 'Ошибка распаковки json')
 
     # Запросить возраст визави пользователя: ДО
     def get_age_high(self, user_id):
@@ -77,6 +93,12 @@ class VKBot:
         response = requests.get(url_age_high, params={**self.params, **params}).json()
 
         try:
+            res = response['response']
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка ключа')
+            res = None
+
+        if res:
             for info in response['response']:
                 date = info.get('bdate')
                 date_list = date.split('.')
@@ -89,13 +111,19 @@ class VKBot:
                     for event in self.longpoll.listen():
                         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                             age = event.text
-                            if age >= 18 and age <= 99 or age >= self.get_age_low:
+                            if age >= self.get_age_low:
                                 return age
+                            if age.isdigit():
+                                age = int(age)
+                                if age >= 18 and age <= 99:
+                                    return age
+                                else:
+                                    self.write_msg(user_id, 'Значение, которое вы ввели, не является числом.')
                             else:
                                 self.write_msg(user_id, 'Введено неверное значение.')
                                 continue
-        except KeyError:
-            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
+        else:
+            self.write_msg(user_id, 'Ошибка распаковки json')
 
     # Запросить пол визави пользователя и сменить на противоположный
     def get_sex(self, user_id):
@@ -105,6 +133,12 @@ class VKBot:
         response = requests.get(url_get_sex, params={**self.params, **params}).json()
 
         try:
+            res = response['response']
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка ключа')
+            res = None
+
+        if res:
             for info in response['response']:
                 if info.get('sex') == 2:
                     sex = 1
@@ -112,8 +146,8 @@ class VKBot:
                 elif info.get('sex') == 1:
                     sex = 2
                     return sex
-        except KeyError:
-            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
+        else:
+            self.write_msg(user_id, 'Ошибка распаковки json')
 
     # Адаптация названия города к ИД города
     def cities(self, user_id, city_name):
@@ -126,14 +160,20 @@ class VKBot:
         response = requests.get(url_cities, params={**self.params, **params}).json()
 
         try:
+            res = response['response']
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка ключа')
+            res = None
+
+        if res:
             for info in response['response']['items']:
                 found_city_name = info.get('title')
                 if found_city_name == city_name:
                     found_city_id = info.get('id')
                     return int(found_city_id)
 
-        except KeyError:
-            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
+        else:
+            self.write_msg(user_id, 'Ошибка распаковки json')
 
     # Запросить название города визави пользователя
     def find_city(self, user_id):
@@ -147,6 +187,12 @@ class VKBot:
         response = requests.get(url_city, params={**self.params, **params}).json()
 
         try:
+            res = response['response']
+        except KeyError:
+            self.write_msg(user_id, 'Ошибка ключа')
+            res = None
+
+        if res:
             for info in response['response']:
                 if 'city' in info:
                     city = info.get('city')
@@ -163,8 +209,8 @@ class VKBot:
                             else:
                                 self.write_msg(user_id, 'Введено неверное значение.')
                                 break
-        except KeyError:
-            self.write_msg(user_id, 'Ошибка получения токена. Укажите токен в TOKEN_GROUP')
+        else:
+            self.write_msg(user_id, 'Ошибка распаковки json')
 
     # Поиск визави по запрошенным данным + определние семейного/не семейного положения
     def find_user(self, user_id):
@@ -178,7 +224,7 @@ class VKBot:
                   'status': 1 or 6,
                   'count': 500}
         response = requests.get(url_search, params={**self.params, **params}).json()
-        import simplejson
+
         try:
             for person_dict in response['response']['items']:
                 if person_dict.get('is_closed') == False:
@@ -205,15 +251,20 @@ class VKBot:
         }
         response = requests.get(url_photos_id, params={**self.params, **params}).json()
 
-        photos = dict()
-        for info_user in response['response']['items']:
-            photo_id = str(info_user.get('id'))
-            i_likes = info_user.get('likes')
-            if i_likes.get('count'):
-                likes = i_likes.get('count')
-                photos[likes] = photo_id
-        list_of_ids = sorted(photos.items(), reverse=True)
-        return list_of_ids
+        import simplejson
+        try:
+            photos = dict()
+            for info_user in response['response']['items']:
+                photo_id = str(info_user.get('id'))
+                i_likes = info_user.get('likes')
+                if i_likes.get('count'):
+                    likes = i_likes.get('count')
+                    photos[likes] = photo_id
+            list_of_ids = sorted(photos.items(), reverse=True)
+            return list_of_ids
+
+        except simplejson.JSONDecodeError:
+            self.write_msg(user_id, "Ошибка при разборе json")
 
     # Фото номер 1
     def get_photo_1(self, user_id):
