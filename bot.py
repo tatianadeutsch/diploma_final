@@ -10,8 +10,8 @@ from database import *
 class VKBot:
     def __init__(self):
         print('Ура! Бот наконец-то создан!')
-        TOKEN_GROUP = 'vk1.a.oTh7jAywfJBeHbav1ERJnP8VN-sx6IUIzt6UwddnZe5ZB8uTqB7fT__CPJbQCanQE_LFFueIzBHvh5ZUp0AxEkI1xy1Z8uii8WbwiekOf3Ip54EHcjxpIdSW1zIEsHCCcVRdlHvsOdpITai3F0zhTDoPWc0H7JVKUPFJohImLjQFWZoH9fpIDSjH7t3KvJukE8qQYR0urZ2tuQw-AZUl1w'
-        TOKEN_APP = 'vk1.a.bs60HhC6-7DMG2kcOzM0SCtp4AqhatQjEiy-BhsYG9T_jzmiGSxnG9X0nYPGeBjtUICj_hq0mUdxdfp5jYa7Qw0FopXoBi9bqBzLAf80SqvNsDVe8jJ1aZaE8S6CXyTuxyUZ_vysVCs684tKUdwp6yb2_0mRdxiCCVDTILbn43IVcRRFu-L7t3aYzs1pAD-QZi-mbPnBhEts7XiIe-83Nw'
+        TOKEN_GROUP = ''
+        TOKEN_APP = ''
         self.vk = vk_api.VkApi(token=TOKEN_GROUP)
         self.longpoll = VkLongPoll(self.vk)
         self.url = 'https://api.vk.com/method/'
