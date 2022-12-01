@@ -21,7 +21,7 @@ class VKBot:
             'v': '5.131'
         }
 
-    def write_msg(self, user_id, message):
+        def write_msg(self, user_id, message):
         self.vk.method('messages.send', {'user_id': user_id,
                                          'message': message,
                                          'random_id': randrange(10 ** 7)})
@@ -36,7 +36,7 @@ class VKBot:
         try:
             res = response['response']
         except KeyError:
-            self.write_msg(user_id, 'Ошибка ключа')
+            self.write_msg(user_id, 'Ошибка KeyError')
             res = None
 
         if res:
@@ -46,7 +46,7 @@ class VKBot:
                     return first_name
 
         else:
-            self.write_msg(user_id, 'Ошибка распаковки json')
+            self.write_msg(user_id, 'Ошибка')
 
     # Запросить возраст визави пользователя: ОТ
     def get_age_low(self, user_id):
@@ -58,7 +58,7 @@ class VKBot:
         try:
             res = response['response']
         except KeyError:
-            self.write_msg(user_id, 'Ошибка ключа')
+            self.write_msg(user_id, 'Ошибка KeyError')
             res = None
         if res:
             for info in response['response']:
@@ -83,7 +83,7 @@ class VKBot:
                                 self.write_msg(user_id, 'Введено неверное значение.')
                                 continue
         else:
-            self.write_msg(user_id, 'Ошибка распаковки json')
+            self.write_msg(user_id, 'Ошибка')
 
     # Запросить возраст визави пользователя: ДО
     def get_age_high(self, user_id):
@@ -95,7 +95,7 @@ class VKBot:
         try:
             res = response['response']
         except KeyError:
-            self.write_msg(user_id, 'Ошибка ключа')
+            self.write_msg(user_id, 'Ошибка KeyError')
             res = None
 
         if res:
@@ -113,7 +113,7 @@ class VKBot:
                             age = event.text
                             if age >= self.get_age_low:
                                 return age
-                            if age.isdigit():
+                            elif age.isdigit():
                                 age = int(age)
                                 if age >= 18 and age <= 99:
                                     return age
@@ -123,7 +123,7 @@ class VKBot:
                                 self.write_msg(user_id, 'Введено неверное значение.')
                                 continue
         else:
-            self.write_msg(user_id, 'Ошибка распаковки json')
+            self.write_msg(user_id, 'Ошибка')
 
     # Запросить пол визави пользователя и сменить на противоположный
     def get_sex(self, user_id):
@@ -135,7 +135,7 @@ class VKBot:
         try:
             res = response['response']
         except KeyError:
-            self.write_msg(user_id, 'Ошибка ключа')
+            self.write_msg(user_id, 'Ошибка KeyError')
             res = None
 
         if res:
@@ -147,7 +147,7 @@ class VKBot:
                     sex = 2
                     return sex
         else:
-            self.write_msg(user_id, 'Ошибка распаковки json')
+            self.write_msg(user_id, 'Ошибка')
 
     # Адаптация названия города к ИД города
     def cities(self, user_id, city_name):
@@ -160,9 +160,9 @@ class VKBot:
         response = requests.get(url_cities, params={**self.params, **params}).json()
 
         try:
-            res = response['response']
+            res = response['response']['items']
         except KeyError:
-            self.write_msg(user_id, 'Ошибка ключа')
+            self.write_msg(user_id, 'Ошибка KeyError')
             res = None
 
         if res:
@@ -173,7 +173,7 @@ class VKBot:
                     return int(found_city_id)
 
         else:
-            self.write_msg(user_id, 'Ошибка распаковки json')
+            self.write_msg(user_id, 'Ошибка')
 
     # Запросить название города визави пользователя
     def find_city(self, user_id):
@@ -189,7 +189,7 @@ class VKBot:
         try:
             res = response['response']
         except KeyError:
-            self.write_msg(user_id, 'Ошибка ключа')
+            self.write_msg(user_id, 'Ошибка KeyError')
             res = None
 
         if res:
@@ -203,14 +203,15 @@ class VKBot:
                     for event in self.longpoll.listen():
                         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                             city_name = event.text
-                            id_city = self.cities(user_id, city_name)
-                            if id_city != '' or id_city != None:
-                                return str(id_city)
+                            if city_name in 'city':
+                                id_city = self.cities(user_id, city_name)
+                                if id_city != '' or id_city != None:
+                                    return str(id_city)
                             else:
                                 self.write_msg(user_id, 'Введено неверное значение.')
                                 break
         else:
-            self.write_msg(user_id, 'Ошибка распаковки json')
+            self.write_msg(user_id, 'Ошибка')
 
     # Поиск визави по запрошенным данным + определние семейного/не семейного положения
     def find_user(self, user_id):
@@ -236,8 +237,8 @@ class VKBot:
                 else:
                     continue
             return f'Поиск завершён'
-        except simplejson.JSONDecodeError:
-            self.write_msg(user_id, "Ошибка при разборе json")
+        except LookupError:
+            self.write_msg(user_id, "Ошибка LookupError")
 
     # Получить фотографии
     def get_photos_id(self, user_id):
@@ -251,7 +252,6 @@ class VKBot:
         }
         response = requests.get(url_photos_id, params={**self.params, **params}).json()
 
-        import simplejson
         try:
             photos = dict()
             for info_user in response['response']['items']:
@@ -263,8 +263,8 @@ class VKBot:
             list_of_ids = sorted(photos.items(), reverse=True)
             return list_of_ids
 
-        except simplejson.JSONDecodeError:
-            self.write_msg(user_id, "Ошибка при разборе json")
+        except LookupError:
+            self.write_msg(user_id, "Ошибка LookupError")
 
     # Фото номер 1
     def get_photo_1(self, user_id):
